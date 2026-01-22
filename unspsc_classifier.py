@@ -8,6 +8,8 @@ from typing import Callable
 import pandas as pd
 
 
+REQUIRED_COLUMNS = ["Service Description in English", "AI Category Title"]
+
 UNSPSC_PROMPT_TEMPLATE = (
     "You are a UNSPSC classifier. Return ONLY the UNSPSC category title that best matches "
     "the service description. If uncertain, choose the closest relevant title. "
@@ -61,6 +63,8 @@ def process_batches(
     batch_size: int,
 ) -> None:
     df["AI Category Title"] = df["AI Category Title"].astype(str)
+    total_records = len(df)
+    num_batches = (total_records + batch_size - 1) // batch_size
     num_batches = (len(df) + batch_size - 1) // batch_size
 
     for batch_num in range(num_batches):
@@ -68,6 +72,7 @@ def process_batches(
         batch_start_timestamp = datetime.datetime.now()
 
         start_index = batch_num * batch_size
+        end_index = min(start_index + batch_size, total_records)
         end_index = min(start_index + batch_size, len(df))
         df_batch = df.iloc[start_index:end_index]
 
@@ -130,6 +135,7 @@ def main() -> int:
     print(f"Overall process started at {overall_start_timestamp}")
 
     df = pd.read_excel(args.input)
+    ensure_columns(df, REQUIRED_COLUMNS)
     ensure_columns(
         df, ["Service Description in English", "AI Category Title"]
     )
