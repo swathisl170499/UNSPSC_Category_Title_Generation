@@ -65,6 +65,7 @@ def process_batches(
     df["AI Category Title"] = df["AI Category Title"].astype(str)
     total_records = len(df)
     num_batches = (total_records + batch_size - 1) // batch_size
+    num_batches = (len(df) + batch_size - 1) // batch_size
 
     for batch_num in range(num_batches):
         batch_start_time = time.time()
@@ -72,6 +73,7 @@ def process_batches(
 
         start_index = batch_num * batch_size
         end_index = min(start_index + batch_size, total_records)
+        end_index = min(start_index + batch_size, len(df))
         df_batch = df.iloc[start_index:end_index]
 
         for index, row in df_batch.iterrows():
@@ -134,6 +136,9 @@ def main() -> int:
 
     df = pd.read_excel(args.input)
     ensure_columns(df, REQUIRED_COLUMNS)
+    ensure_columns(
+        df, ["Service Description in English", "AI Category Title"]
+    )
 
     classifier = UnspscClassifier(args.api_key, build_openai_client(args.api_key))
     process_batches(df, classifier, args.output, args.batch_size)
